@@ -1,6 +1,12 @@
 const path = require('path')
+const address = require('address')
+const chalk = require('chalk')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+
+function clearConsole() {
+	process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H')
+}
 
 module.exports = {
 	mode: 'development',
@@ -14,7 +20,7 @@ module.exports = {
 		host: '0.0.0.0',
 		port: 8088,
 		compress: true,
-		// noInfo: true,
+		noInfo: true,
 		useLocalIp: true,
 		hot: true,
 		open: false,
@@ -77,6 +83,23 @@ module.exports = {
 			},
 			filename: 'index.html',
 			template: './src/index.html'
-		})
+		}),
+		function() {
+			const isInteractive = process.stdout.isTTY
+			this.hooks.invalid.tap('invalid', () => {
+				if (isInteractive) {
+					clearConsole()
+				}
+				console.log('Compiling...')
+			})
+			this.hooks.done.tap('done', () => {
+				if (isInteractive) {
+					clearConsole()
+				}
+				console.log(`You can now view ${chalk.bold('App')} in the browser.`)
+				console.log(`  ${chalk.bold('Local:')}            http://localhost:${8088}`)
+				console.log(`  ${chalk.bold('On Your Network:')}  http://${address.ip()}:${8088}`)
+			})
+		}
 	]
 }
