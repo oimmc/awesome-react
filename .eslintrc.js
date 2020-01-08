@@ -29,7 +29,9 @@ module.exports = {
 		'newline-per-chained-call': ['error', { ignoreChainWithDepth: 4 }],
 		'object-property-newline': ['error', { allowAllPropertiesOnSameLine: true }],
 		'linebreak-style': ['off', 'windows'],
-		'jsx-quotes': ['error', 'prefer-single']
+		'jsx-quotes': ['error', 'prefer-single'],
+		'comma-dangle': ['error', 'never'],
+		'comma-spacing': 'error'
 	},
 	settings: {
 		react: {
