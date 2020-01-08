@@ -11,11 +11,12 @@ module.exports = {
 	},
 	devtool: 'inline-source-map',
 	devServer: {
-		contentBase: './dist',
 		historyApiFallback: true,
 		host: '0.0.0.0',
-		compress: true,
 		port: 8088,
+		compress: true,
+		// noInfo: true,
+		useLocalIp: true,
 		hot: true,
 		open: false,
 		proxy: {

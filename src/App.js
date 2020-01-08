@@ -4,7 +4,7 @@ import './assets/style/app.css'
 class App extends Component {
 	render() { 
 		return (
-			<div id='app'>app21</div>
+			<div id='app'>app212</div>
 		)
 	}
 }
