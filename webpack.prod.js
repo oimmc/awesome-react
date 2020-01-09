@@ -1,39 +1,21 @@
 const path = require('path')
-const address = require('address')
-const chalk = require('chalk')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+// const UglifyJSPlugin = require('uglifyjs-webpack-plugin') //作废
+const TerserJSPlugin = require('terser-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
 
-function clearConsole() {
-	process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H')
+function assetsPath(_path) {
+	return path.posix.join(process.env.NODE_ENV === 'development' ? './' : '/', _path)
 }
 
 module.exports = {
-	mode: process.env.NODE_ENV,
-	entry: './src/index.js',
+	mode: 'production',
+	entry: './src/index',
 	output: {
-		publicPath: '/'
-	},
-	devtool: 'inline-source-map',
-	devServer: {
-		historyApiFallback: true,
-		host: '0.0.0.0',
-		port: 8088,
-		compress: true,
-		noInfo: true,
-		useLocalIp: true,
-		hot: true,
-		open: false,
-		proxy: {
-			'/api/v3': {
-				target: 'http://11.22.33.111:8891',
-				changeOrigin: true,
-				secure: false,
-				pathRewrite: {
-					'^/': ''
-				}
-			}
-		}
+		filename: '[name].[hash:7].js',
+		path: path.resolve(__dirname, 'dist')
 	},
 	resolve: {
 		extensions: ['.js', '.jsx', '.json']
@@ -98,11 +80,25 @@ module.exports = {
 			},
 			{
 				test: /\.(png|svg|jpg|gif)$/,
-				use: ['file-loader']
+				use: [
+					{
+						loader: 'file-loader',
+						options: {
+							limit: 1024 * 1,
+							name: assetsPath('img/[name].[hash:7].[ext]')
+						}
+					}
+				]
 			},
 			{
 				test: /\.(woff|woff2|eot|ttf|otf)$/,
-				use: ['file-loader']
+				use: {
+					loader: 'url-loader',
+					options: {
+						limit: 10000,
+						name: assetsPath('fonts/[name].[hash:7].[ext]')
+					}
+				}
 			},
 			{
 				test: /\.(csv|tsv)$/,
@@ -114,10 +110,30 @@ module.exports = {
 			}
 		]
 	},
+	optimization: {
+		minimize: true,
+		minimizer: [
+			new TerserJSPlugin({
+				cache: true
+			})
+		]
+	},
 	plugins: [
+		new TerserJSPlugin({}),
 		new MiniCssExtractPlugin({
 			filename: 'css/[name].[hash:7].css',
 			chunkFilename: 'css/[name].[hash:7].css'
+		}),
+		new OptimizeCSSAssetsPlugin({
+			// assetNameRegExp: /\.optimize\.css$/g,
+			cssProcessor: require('cssnano'),
+			cssProcessorPluginOptions: {
+				preset: ['default', { discardComments: { removeAll: true } }]
+			},
+			canPrint: true
+		}),
+		new CleanWebpackPlugin({
+			cleanOnceBeforeBuildPatterns: [path.resolve(process.cwd(), 'dist')]
 		}),
 		new HtmlWebpackPlugin({
 			minify: {
@@ -131,23 +147,6 @@ module.exports = {
 			},
 			filename: 'index.html',
 			template: './src/index.html'
-		}),
-		function() {
-			const isInteractive = process.stdout.isTTY
-			this.hooks.invalid.tap('invalid', () => {
-				if (isInteractive) {
-					clearConsole()
-				}
-				console.log('Compiling...')
-			})
-			this.hooks.done.tap('done', () => {
-				if (isInteractive) {
-					clearConsole()
-				}
-				console.log(`You can now view ${chalk.bold('App')} in the browser.`)
-				console.log(`  ${chalk.bold('Local:')}            http://localhost:${8088}`)
-				console.log(`  ${chalk.bold('On Your Network:')}  http://${address.ip()}:${8088}`)
-			})
-		}
+		})
 	]
 }
